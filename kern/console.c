@@ -47,6 +47,8 @@ delay(void)
 
 static bool serial_exists;
 
+static int putc_cnt = 0;
+
 static int
 serial_proc_data(void)
 {
@@ -165,6 +167,16 @@ cga_putc(int c)
 	// if no attribute given, then use black on white
 	if (!(c & ~0xFF))
 		c |= 0x0700;
+	/*
+	if(is_nocolor)
+		c |= 0x0700;
+	else{
+		putc_cnt ++;
+		if(putc_cnt % 2)
+			c |= 0x0200;
+		else c |= 0x0400;
+	}
+	*/
 
 	switch (c & 0xff) {
 	case '\b':
