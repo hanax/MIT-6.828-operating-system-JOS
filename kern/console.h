@@ -23,4 +23,6 @@ int cons_getc(void);
 void kbd_intr(void); // irq 1
 void serial_intr(void); // irq 4
 
+int is_nocolor;
+
 #endif /* _CONSOLE_H_ */
