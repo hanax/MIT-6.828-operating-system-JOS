@@ -12,6 +12,7 @@
 #include <kern/kdebug.h>
 #include <kern/trap.h>
 #include <kern/pmap.h>
+#include <kern/env.h>
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
@@ -33,6 +34,8 @@ static struct Command commands[] = {
 	{ "changepermission", "Change the permissions of mapping", mon_changepermission},
 	{ "dump", "Dump the contents of a range of memory given either a virtual or physical address range", mon_dump},
 	{ "seegdt", "GDT", mon_seegdt},
+	{ "continue", "Continue", mon_continue},
+	{ "si", "Step through one instruction", mon_si},
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -218,6 +221,31 @@ mon_seegdt(int argc, char **argv, struct Trapframe *tf)
 	gdtlimit = *(unsigned short *)(&gdt[0]);
 	cprintf("GDT Base: %08x\n", gdtaddr);
 	cprintf("GDT Limit: %04x\n", gdtlimit);
+	return 0;
+}
+
+int
+mon_continue(int argc, char **argv, struct Trapframe *tf)
+{
+	if (tf == NULL) {
+		cprintf("Please set breakpoint\n");
+	} else {
+		tf->tf_eflags &= ~FL_TF;
+		//cprintf("continueing...");
+		env_run(curenv);
+	}
+	return 0;
+}
+
+int
+mon_si(int argc, char **argv, struct Trapframe *tf)
+{
+	if (tf == NULL) {
+		cprintf("Please enter debug mode first\n");
+	} else {
+		tf->tf_eflags |= FL_TF;
+		env_run(curenv);
+	}
 	return 0;
 }
 

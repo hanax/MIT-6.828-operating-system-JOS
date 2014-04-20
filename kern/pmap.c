@@ -162,6 +162,7 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
+	envs = (struct Env *)boot_alloc(sizeof(struct Env) * NENV);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -194,6 +195,7 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
+	boot_map_region(kern_pgdir, UENVS, ROUNDUP(NENV*sizeof(struct Env), PGSIZE), PADDR(envs), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -228,7 +230,7 @@ mem_init(void)
 	//
 	// If the machine reboots at this point, you've probably set up your
 	// kern_pgdir wrong.
-	lcr4(CR4_PSE);
+	//lcr4(CR4_PSE);
 	lcr3(PADDR(kern_pgdir));
 
 	check_page_free_list(0);
@@ -404,16 +406,16 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 {
 	// Fill this function in
 	size_t i;
-	if(size < L_PGSIZE) {
+	//if(size < L_PGSIZE) {
 		for(i = 0; i < size; i += PGSIZE) {
 			pte_t *pte = pgdir_walk(pgdir, (void *)(va + i), true);
 			*pte = PTE_ADDR(pa + i) | perm | PTE_P;
 		}
-	}else {
-		for(i = 0; i < size; i += L_PGSIZE) {
-			pgdir[PDX(va + i)] = L_PTE_ADDR(pa + i) | perm | PTE_P | PTE_PS;
-		}
-	}
+	//}else {
+	//	for(i = 0; i < size; i += L_PGSIZE) {
+	//		pgdir[PDX(va + i)] = L_PTE_ADDR(pa + i) | perm | PTE_P | PTE_PS;
+	//	}
+	//}
 }
 
 //
@@ -548,7 +550,23 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
+	uintptr_t va_i, va_e;
+	va_e = ROUNDUP((uintptr_t)va+len, PGSIZE);
+	perm |= PTE_P;
 
+	for (va_i = (uintptr_t)va;
+		ROUNDDOWN(va_i, PGSIZE) != va_e;
+		va_i = ROUNDDOWN((uintptr_t)va_i + PGSIZE, PGSIZE)) {
+			if (va_i >= ULIM) {
+				user_mem_check_addr = va_i;
+				return -E_FAULT;
+			}
+			pte_t * pte = pgdir_walk(env->env_pgdir, (void *)va_i, 0);
+			if( pte == NULL || (*pte & perm) != perm) {
+				user_mem_check_addr = va_i;
+				return -E_FAULT;
+			}
+		}
 	return 0;
 }
 
