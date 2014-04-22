@@ -29,6 +29,40 @@ sched_yield(void)
 	// below to halt the cpu.
 
 	// LAB 4: Your code here.
+	size_t pos = 0, i, envid;
+	int envid_p = -1;
+	if (curenv) {
+		pos = (ENVX(curenv->env_id) + 1) % NENV;
+	}
+	envid = pos;
+
+	// Lab 4 Challenge 2
+	/*
+	for (i = 0; i < NENV; i ++) {
+		if (envs[envid].env_status == ENV_RUNNABLE &&
+			(envid_p == -1 || envs[envid].env_priority >= envs[envid_p].env_priority))
+			envid_p = envid;
+		envid = (envid + 1) % NENV;
+	}
+
+	//cprintf("xue: %d\n", envs[envid_p].env_priority);
+
+	if (envid_p != -1 &&
+		(!curenv || 
+		 curenv->env_status != ENV_RUNNING ||
+		 envs[envid_p].env_priority > curenv->env_priority))
+		env_run(&envs[envid_p]);
+	*/
+
+	for (i = 0; i < NENV; i ++) {
+		if (envs[envid].env_status == ENV_RUNNABLE)
+			env_run(&envs[envid]);
+		envid = (envid + 1) % NENV;
+	}
+	
+
+	if (curenv && curenv->env_status == ENV_RUNNING) 
+		env_run(curenv);
 
 	// sched_halt never returns
 	sched_halt();
