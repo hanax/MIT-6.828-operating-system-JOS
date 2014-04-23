@@ -47,10 +47,70 @@
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
+TRAPHANDLER(vec8, T_DBLFLT);
+TRAPHANDLER(vec10, T_TSS);
+TRAPHANDLER(vec11, T_SEGNP);
+TRAPHANDLER(vec12, T_STACK);
+TRAPHANDLER(vec13, T_GPFLT);
+TRAPHANDLER(vec14, T_PGFLT);
+TRAPHANDLER(vec17, T_ALIGN);
 
+TRAPHANDLER_NOEC(vec0, T_DIVIDE);
+TRAPHANDLER_NOEC(vec1, T_DEBUG);
+TRAPHANDLER_NOEC(vec2, T_NMI);
+TRAPHANDLER_NOEC(vec3, T_BRKPT);
+TRAPHANDLER_NOEC(vec4, T_OFLOW);
+TRAPHANDLER_NOEC(vec5, T_BOUND);
+TRAPHANDLER_NOEC(vec6, T_ILLOP);
+TRAPHANDLER_NOEC(vec7, T_DEVICE);
+TRAPHANDLER_NOEC(vec16, T_FPERR);
+TRAPHANDLER_NOEC(vec18, T_MCHK);
+TRAPHANDLER_NOEC(vec19, T_SIMDERR);
 
+TRAPHANDLER_NOEC(vec48, T_SYSCALL);
 
+TRAPHANDLER_NOEC(vec32, IRQ_OFFSET + IRQ_TIMER);
+TRAPHANDLER_NOEC(vec33, IRQ_OFFSET + IRQ_KBD);
+TRAPHANDLER_NOEC(vec36, IRQ_OFFSET + IRQ_SERIAL);
+TRAPHANDLER_NOEC(vec39, IRQ_OFFSET + IRQ_SPURIOUS);
+TRAPHANDLER_NOEC(vec46, IRQ_OFFSET + IRQ_IDE);
+TRAPHANDLER_NOEC(vec51, IRQ_OFFSET + IRQ_ERROR);
+
+.data
+	.globl vectors
+vectors:
+	.long vec0
+	.long vec1
+	.long vec2
+	.long vec3
+	.long vec4
+	.long vec5
+	.long vec6
+	.long vec7
+	.long vec8
+	.long 0
+	.long vec10
+	.long vec11
+	.long vec12
+	.long vec13
+	.long vec14
+	.long 0
+	.long vec16
+	.long vec17
+	.long vec18
+	.long vec19
 /*
  * Lab 3: Your code here for _alltraps
  */
+.text
+_alltraps:
+	pushl %ds;
+	pushl %es;
+	pushal;
 
+	movl $GD_KD, %eax;
+	movw %ax, %ds;
+	movw %ax, %es;
+
+	pushl %esp;
+	call trap;
