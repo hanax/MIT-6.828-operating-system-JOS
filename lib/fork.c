@@ -70,15 +70,22 @@ duppage(envid_t envid, unsigned pn)
 	int r;
 	// LAB 4: Your code here.
 	void *va = (void *)(pn * PGSIZE);
-	if ((uvpt[pn] & PTE_W) || (uvpt[pn] & PTE_COW)) {
+
+	if (uvpt[pn] & PTE_SHARE) {
+		r = sys_page_map(0, va, envid, va, uvpt[pn] & PTE_SYSCALL);
+		if (r < 0) panic("duppage: sys_page_map %e\n", r);
+
+	} else if ((uvpt[pn] & PTE_W) || (uvpt[pn] & PTE_COW)) {
 		r = sys_page_map(0, va, envid, va, PTE_P | PTE_U | PTE_COW);
 		if (r < 0) panic("duppage: sys_page_map %e\n", r);
 		r = sys_page_map(0, va, 0, va, PTE_P | PTE_U | PTE_COW);
 		if (r < 0) panic("duppage: sys_page_map %e\n", r);
+
 	} else {
 		r = sys_page_map(0, va, envid, va, PTE_P | PTE_U);
 		if (r < 0) panic("duppage: sys_page_map %e\n", r);
 	}
+	
 	//panic("duppage not implemented");
 	return 0;
 }
@@ -102,7 +109,7 @@ duppage(envid_t envid, unsigned pn)
 envid_t
 fork(void)
 {
-	static int cnt_p = 111111;
+	//static int cnt_p = 111111;
 	// LAB 4: Your code here.
 	set_pgfault_handler(pgfault);
 	envid_t envid = sys_exofork();
