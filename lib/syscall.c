@@ -122,3 +122,9 @@ sys_env_set_priority(envid_t envid, uint32_t priority)
 {
 	return syscall(SYS_env_set_priority, 1, envid, priority, 0, 0, 0);
 }
+
+void
+sys_exec(uint32_t eip, uint32_t esp, void * v_ph, uint32_t phnum)
+{
+	syscall(SYS_exec, 1, eip, esp, (uint32_t)v_ph, phnum, 0);
+}
