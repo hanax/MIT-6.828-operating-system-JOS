@@ -20,6 +20,7 @@
 #include <inc/fs.h>
 #include <inc/fd.h>
 #include <inc/args.h>
+#include <inc/spinlock.h>
 
 #define USED(x)		(void)(x)
 
@@ -58,6 +59,8 @@ int	sys_page_unmap(envid_t env, void *pg);
 int	sys_ipc_try_send(envid_t to_env, uint32_t value, void *pg, int perm);
 int	sys_ipc_recv(void *rcv_pg);
 int sys_env_set_priority(envid_t envid, uint32_t priority);
+static envid_t sys_exothread(void);
+int sys_join(envid_t envid);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))
@@ -67,6 +70,19 @@ sys_exofork(void)
 	__asm __volatile("int %2"
 		: "=a" (ret)
 		: "a" (SYS_exofork),
+		  "i" (T_SYSCALL)
+	);
+	return ret;
+}
+
+// PROJECT: thread
+static __inline envid_t __attribute__((always_inline))
+sys_exothread(void)
+{
+	envid_t ret;
+	__asm __volatile("int %2"
+		: "=a" (ret)
+		: "a" (SYS_exothread),
 		  "i" (T_SYSCALL)
 	);
 	return ret;
@@ -121,6 +137,14 @@ int	pipeisclosed(int pipefd);
 
 // wait.c
 void	wait(envid_t env);
+
+// PROJECT: thread
+// thread.c
+int pthread_create(uint32_t * t_id, void (*fun)(void *), void *arg);
+int pthread_join(envid_t id);
+int pthread_mutex_init(pthread_mutex_t * mutex, pthread_mutexattr_t * attr);
+int pthread_mutex_lock(pthread_mutex_t * mutex);
+int pthread_mutex_unlock(pthread_mutex_t * mutex);
 
 /* File open modes */
 #define	O_RDONLY	0x0000		/* open for reading only */

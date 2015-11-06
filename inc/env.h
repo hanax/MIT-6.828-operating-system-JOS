@@ -68,6 +68,10 @@ struct Env {
 	int env_ipc_perm;		// Perm of page mapping received
 
 	int env_priority;	// For Lab4 Challenge2
+
+	// PROJECT: thread
+	bool env_isthread;
+	envid_t env_tgid;
 };
 
 #endif // !JOS_INC_ENV_H

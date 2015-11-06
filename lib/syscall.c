@@ -128,3 +128,10 @@ sys_exec(uint32_t eip, uint32_t esp, void * v_ph, uint32_t phnum)
 {
 	syscall(SYS_exec, 1, eip, esp, (uint32_t)v_ph, phnum, 0);
 }
+
+// PROJECT: thread
+int
+sys_join(envid_t envid)
+{
+	return syscall(SYS_join, 0, envid, 0, 0, 0, 0);
+}

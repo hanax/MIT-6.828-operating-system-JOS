@@ -12,6 +12,8 @@
 #include <kern/syscall.h>
 #include <kern/console.h>
 #include <kern/sched.h>
+#include <kern/cpu.h>
+#include <kern/spinlock.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -56,6 +58,16 @@ sys_env_destroy(envid_t envid)
 
 	if ((r = envid2env(envid, &e, 1)) < 0)
 		return r;
+
+	// PROJECT: thread
+	if (e->env_isthread == 0) {
+		int i;
+		for (i = 0; i < NENV; i ++) 
+			if ((envs[i].env_tgid == curenv->env_id) && (envs[i].env_isthread) && 
+				(envs[i].env_status == ENV_RUNNABLE || envs[i].env_status == ENV_RUNNING))
+				env_destroy(&envs[i]);
+	}
+
 	env_destroy(e);
 	return 0;
 }
@@ -460,6 +472,45 @@ sys_exec(uint32_t eip, uint32_t esp, void * v_ph, uint32_t phnum)
     return 0;
 }
 
+
+// PROJECT: thread
+static envid_t
+sys_exothread(void)
+{
+	struct Env * new_thread;
+	int r = env_thread_alloc(&new_thread, curenv->env_id);
+	if (r < 0)
+		return r;
+
+	new_thread->env_status = ENV_NOT_RUNNABLE;
+	memcpy((void *)(&new_thread->env_tf), (void*)(&curenv->env_tf), 
+			sizeof(struct Trapframe));
+
+	new_thread->env_pgdir = curenv->env_pgdir;
+	new_thread->env_pgfault_upcall = curenv->env_pgfault_upcall;
+
+	new_thread->env_tgid = curenv->env_id;
+
+	return new_thread->env_id;
+}
+
+static int
+sys_join(envid_t envid)
+{
+	struct Env *e;
+	int r = envid2env(envid, &e, 1);
+	if (r < 0)
+		return r;
+	if (e->env_tgid != curenv->env_id) {
+		return -E_NO_THREAD;
+	}
+
+	if (e->env_status == ENV_RUNNABLE || e->env_status == ENV_RUNNING) {
+		return 0;
+	}
+	return 1;
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -519,6 +570,12 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_exec:
 			ret = sys_exec((uint32_t)a1, (uint32_t)a2, (void *)a3, (uint32_t)a4);
 			break;
+        case SYS_exothread:
+        	ret = sys_exothread();
+        	break;
+        case SYS_join:
+        	ret = sys_join((envid_t)a1);
+        	break;
 		default:
 			ret = -E_INVAL;
 	}

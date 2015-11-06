@@ -19,6 +19,8 @@ enum {
 	SYS_ipc_recv,
 	SYS_env_set_priority,
 	SYS_exec,
+	SYS_exothread,
+	SYS_join,
 	NSYSCALLS
 };
 

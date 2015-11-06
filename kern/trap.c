@@ -240,8 +240,9 @@ trap_dispatch(struct Trapframe *tf)
 						tf->tf_regs.reg_ebx,
 						tf->tf_regs.reg_edi,
 						tf->tf_regs.reg_esi);
-			if (r < 0)
-				warn("trap_dispatch: syscall %e", r);
+			if (r < 0){
+				//warn("trap_dispatch: syscall %e", r);
+			}
 			tf->tf_regs.reg_eax = r;
 			break;
 		}

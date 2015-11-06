@@ -26,6 +26,9 @@ enum {
 	E_NOT_EXEC	= 14,	// File not a valid executable
 	E_NOT_SUPP	= 15,	// Operation not supported
 
+	// PRJECT: thread
+	E_NO_THREAD	= 16,	// Thread ID doesn't exist
+
 	MAXERROR
 };
 

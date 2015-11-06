@@ -16,7 +16,7 @@ check_super(void)
 	if (super->s_nblocks > DISKSIZE/BLKSIZE)
 		panic("file system is too large");
 
-	cprintf("superblock is good\n");
+	//cprintf("superblock is good\n");
 }
 
 
